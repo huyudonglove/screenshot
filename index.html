@@ -1,0 +1,149 @@
+<!--
+ * @Description: 
+ * @Author: ydhu5
+ * @Date: 2021-10-26 17:59:52
+ * @LastEditTime: 2021-11-02 13:59:20
+ * @LastEditors: ydhu5
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div>
+        <canvas id="canvas"  width="800" height="388">
+        </canvas>
+        <canvas id="canvas2"  width="800" height="388">
+
+        </canvas>
+        <input type="file" id="ind" onchange="change()">
+        <img src="./2.jpg" alt="" width="500px">
+        <button onclick="save()">保存</button>
+    </div>
+</body>
+<script>
+
+  //1.canvas跨域，通过blob格式读取上传图片 URL.createObjectURL
+  //2.canvaa绘画图片 ctx.drawImage
+  //3.获取方框内数据  ctx.getImageData(1, 1, 798, 98)
+  //4.渲染截图 putImageData
+  //5.截图数据格式base64转binary canvas2.toDataURL
+  //7.局部放大   ctx.drawImage(img,0,0,n*100,n*100);
+  //
+    var canvas = document.getElementById("canvas");
+      var ind=document.getElementById("ind");
+      var ctx = canvas.getContext("2d");
+      var canvas2 = document.getElementById("canvas2");
+      var ctx2 = canvas2.getContext("2d");
+      var img=new Image();
+      var myUrl="";
+      function change(){
+        console.log(ind.files[0]);
+        myUrl=URL.createObjectURL(ind.files[0]);
+        draw(myUrl)
+      }
+      function draw(n){
+        if(!n){
+          n=1
+        }
+        ctx.clearRect(0, 0, 800, 388);
+        console.log(ctx)
+        img.onload=function(){
+          ctx.drawImage(img,0,0,n*100,n*100);
+          // ctx.fillStyle = "rgba(0, 0, 0, .2)";
+          // ctx.fillRect (0, 0, 800, 100);
+          ctx.beginPath();
+          ctx.lineWidth="1";
+          ctx.strokeStyle="red";
+          ctx.moveTo(0,0);
+          ctx.lineTo(0,100);
+          ctx.lineTo(800,100);
+          ctx.lineTo(800,0);
+          ctx.closePath();
+          ctx.stroke();
+        }
+        img.src=myUrl;
+      }
+      function save(){
+          var imgData=ctx.getImageData(1, 1, 798, 98)
+          console.log(imgData)
+          ctx2.putImageData(imgData,0,0)
+          var dataUrl=canvas2.toDataURL();
+          console.log(dataUrl)  
+          var file=dataURLtoBlob(dataUrl);
+          console.log(file)
+          up(file)
+      }
+      function dataURLtoBlob(dataurl) {
+          var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+          bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+          while (n--) {
+            u8arr[n] = bstr.charCodeAt(n);
+          }
+        return new Blob([u8arr], {type: mime});
+      }
+function up(file){
+    const form =new FormData();
+    form.append("file",file);
+    fetch('https//example.billyzou.com/post', {
+      method: 'POST',
+      body:form
+      })
+    }
+    var  size=0;
+    var per=0;
+windowAddMouseWheel();
+function windowAddMouseWheel() {
+    var scrollFunc = function (e) {
+        e = e || window.event;
+        console.log(e)
+        if (e.wheelDelta) {  //判断浏览器IE，谷歌滑轮事件
+            if (e.wheelDelta > 0) { //当滑轮向上滚动时
+                //alert("滑轮向上滚动");
+               // console.log(e)
+               per=e.wheelDelta;
+            }
+            if (e.wheelDelta < 0) { //当滑轮向下滚动时
+                //alert("滑轮向下滚动");
+               // console.log(e)
+               per=Math.abs(e.wheelDelta)
+            }
+        } else if (e.detail) {  //Firefox滑轮事件
+            if (e.detail> 0) { //当滑轮向上滚动时
+                //alert("滑轮向上滚动");
+                //console.log(e)
+            }
+            if (e.detail< 0) { //当滑轮向下滚动时
+                //alert("滑轮向下滚动");
+                //console.log(e)
+            }
+        }
+//666666666666
+      if(e.target.id=="canvas"){
+            size=size+e.wheelDelta;
+            console.log(size)
+            if(size>0){
+              var n=size/per;
+               draw(n) 
+            }else{
+              var n=per/size;
+              draw(n)
+            }
+          }
+
+    };
+    //给页面绑定滑轮滚动事件
+    if (document.addEventListener) {
+        document.addEventListener('DOMMouseScroll', scrollFunc, false);
+    }
+//滚动滑轮触发scrollFunc方法
+    window.onmousewheel = document.onmousewheel = scrollFunc;
+    
+}
+console.log(canvas)
+</script>
+</html>
